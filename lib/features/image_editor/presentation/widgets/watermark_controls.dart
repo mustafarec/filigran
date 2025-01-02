@@ -169,7 +169,7 @@ class WatermarkControls extends HookConsumerWidget {
                 Slider(
                   value: watermarkState.logoScale,
                   min: 0.1,
-                  max: 2.0,
+                  max: 1.0,
                   onChanged: (value) {
                     ref
                         .read(watermarkNotifierProvider.notifier)

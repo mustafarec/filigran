@@ -39,6 +39,8 @@ class WatermarkNotifier extends Notifier<WatermarkState?> {
     state = state!.copyWith(
       logoPath: logoPath,
       isLogoVisible: true,
+      logoScale: 0.3,
+      logoOpacity: 0.75,
     );
   }
 

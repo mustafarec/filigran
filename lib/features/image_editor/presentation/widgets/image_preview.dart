@@ -268,23 +268,27 @@ class ImagePreview extends HookConsumerWidget {
 
                                 // Logo boyutlarını hesapla
                                 final scaledLogoWidth =
-                                    logoSize.data?.width ?? 100;
+                                    (logoSize.data?.width ?? 100) *
+                                        watermarkState.logoScale;
                                 final scaledLogoHeight =
-                                    logoSize.data?.height ?? 100;
+                                    (logoSize.data?.height ?? 100) *
+                                        watermarkState.logoScale;
 
                                 // Sınırları hesapla
-                                final maxX = calculatedImageSize.width -
-                                    (scaledLogoWidth *
-                                        watermarkState.logoScale);
+                                final maxX =
+                                    calculatedImageSize.width - scaledLogoWidth;
                                 final maxY = calculatedImageSize.height -
-                                    (scaledLogoHeight *
-                                        watermarkState.logoScale);
+                                    scaledLogoHeight;
 
                                 // Doğrudan pozisyon hesaplama
                                 final newPosition = Offset(
-                                  (localPosition.dx - imageLeft)
+                                  (localPosition.dx -
+                                          imageLeft -
+                                          scaledLogoWidth / 2)
                                       .clamp(0.0, maxX),
-                                  (localPosition.dy - imageTop)
+                                  (localPosition.dy -
+                                          imageTop -
+                                          scaledLogoHeight / 2)
                                       .clamp(0.0, maxY),
                                 );
 
@@ -323,7 +327,11 @@ class ImagePreview extends HookConsumerWidget {
                                       opacity: watermarkState.logoOpacity,
                                       child: Image.file(
                                         File(watermarkState.logoPath!),
-                                        scale: 1 / watermarkState.logoScale,
+                                        width: (logoSize.data?.width ?? 100) *
+                                            watermarkState.logoScale,
+                                        height: (logoSize.data?.height ?? 100) *
+                                            watermarkState.logoScale,
+                                        fit: BoxFit.contain,
                                       ),
                                     ),
                                   ),
