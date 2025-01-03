@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:flutter/foundation.dart';
-import '../utils/offset_converter.dart';
+import 'converters.dart';
 
 part 'watermark_state.freezed.dart';
 part 'watermark_state.g.dart';

@@ -28,18 +28,26 @@ class ImagePreview extends HookConsumerWidget {
   }
 
   Size _calculateImageDimensions(Size imageSize, Size containerSize) {
+    if (imageSize.width <= 0 ||
+        imageSize.height <= 0 ||
+        containerSize.width <= 0 ||
+        containerSize.height <= 0) {
+      return const Size(300, 200);
+    }
+
     final double aspectRatio = imageSize.width / imageSize.height;
     double width = containerSize.width;
     double height = containerSize.height;
-
-    if (containerSize.width <= 0 || containerSize.height <= 0) {
-      return Size(300, 200);
-    }
 
     if (width / height > aspectRatio) {
       width = height * aspectRatio;
     } else {
       height = width / aspectRatio;
+    }
+
+    // NaN kontrolü
+    if (width.isNaN || height.isNaN) {
+      return const Size(300, 200);
     }
 
     return Size(width, height);
@@ -92,20 +100,8 @@ class ImagePreview extends HookConsumerWidget {
 
     // Pan hareketi için değişkenler
     final isDragging = useState(false);
-
-    // Sürükleme başladığında
-    void onDragStart() {
-      isDragging.value = true;
-      animationController.forward();
-      HapticFeedback.mediumImpact();
-    }
-
-    // Sürükleme bittiğinde
-    void onDragEnd() {
-      isDragging.value = false;
-      animationController.reverse();
-      HapticFeedback.lightImpact();
-    }
+    final dragStartOffset = useState<Offset>(Offset.zero);
+    final elementStartOffset = useState<Offset>(Offset.zero);
 
     return Center(
       child: ClipRect(
@@ -124,7 +120,7 @@ class ImagePreview extends HookConsumerWidget {
                 )
               : LayoutBuilder(
                   builder: (context, constraints) {
-                    if (!imageSize.hasData) {
+                    if (!imageSize.hasData || imageSize.data == null) {
                       return const Center(
                         child: CircularProgressIndicator(),
                       );
@@ -135,17 +131,26 @@ class ImagePreview extends HookConsumerWidget {
                       Size(constraints.maxWidth, constraints.maxHeight),
                     );
 
+                    // Boyut kontrolü
+                    if (calculatedImageSize.width <= 0 ||
+                        calculatedImageSize.height <= 0) {
+                      return const Center(
+                        child: Text('Resim boyutları geçersiz'),
+                      );
+                    }
+
                     final textStyle = TextStyle(
                       color: Colors.white.withOpacity(
                           watermarkState.watermarkOpacity == 0
                               ? 0
                               : watermarkState.watermarkOpacity),
                       fontSize: 24 * watermarkState.watermarkScale,
+                      height: 1.0,
                       shadows: const [
                         Shadow(
                           color: Colors.black54,
-                          offset: Offset(1, 1),
-                          blurRadius: 2,
+                          offset: Offset(0.5, 0.5),
+                          blurRadius: 1,
                         ),
                       ],
                     );
@@ -160,85 +165,101 @@ class ImagePreview extends HookConsumerWidget {
                         (constraints.maxHeight - calculatedImageSize.height) /
                             2;
 
-                    final minX = 0.0;
-                    final minY = 0.0;
-                    final maxX = max(
-                        0.0, calculatedImageSize.width - textSize.width - 20);
-                    final maxY =
-                        max(0.0, calculatedImageSize.height - textSize.height);
+                    // Metin için sınırlar
+                    final minTextX = 0.0;
+                    final minTextY = 0.0;
+                    final maxTextX =
+                        calculatedImageSize.width - textSize.width - 15;
+                    final maxTextY =
+                        calculatedImageSize.height - textSize.height;
+
+                    // Logo için sınırlar
+                    final scaledLogoWidth = (logoSize.data?.width ?? 100) *
+                        watermarkState.logoScale;
+                    final scaledLogoHeight = (logoSize.data?.height ?? 100) *
+                        watermarkState.logoScale;
+                    final minLogoX = 0.0;
+                    final minLogoY = 0.0;
+                    final maxLogoX =
+                        calculatedImageSize.width - scaledLogoWidth - 15;
+                    final maxLogoY =
+                        calculatedImageSize.height - scaledLogoHeight;
 
                     return Stack(
-                      clipBehavior: Clip.none,
+                      clipBehavior: Clip.hardEdge,
                       children: [
                         Positioned(
-                          left: imageLeft,
-                          top: imageTop,
+                          left: imageLeft.isFinite ? imageLeft : 0,
+                          top: imageTop.isFinite ? imageTop : 0,
                           width: calculatedImageSize.width,
                           height: calculatedImageSize.height,
-                          child: Image.file(
-                            File(watermarkState.imagePath),
-                            fit: BoxFit.fill,
+                          child: ClipRect(
+                            child: Image.file(
+                              File(watermarkState.imagePath),
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Center(
+                                  child: Text('Resim yüklenemedi'),
+                                );
+                              },
+                            ),
                           ),
                         ),
-                        if (watermarkState.watermarkText != null)
+                        if (watermarkState.watermarkText != null &&
+                            textSize.width > 0 &&
+                            textSize.height > 0)
                           Positioned(
-                            left:
-                                imageLeft + watermarkState.watermarkPosition.dx,
-                            top: imageTop + watermarkState.watermarkPosition.dy,
-                            child: GestureDetector(
-                              onPanStart: (details) {
-                                onDragStart();
-                              },
-                              onPanUpdate: (details) {
-                                if (!isDragging.value) return;
+                            left: imageLeft +
+                                watermarkState.watermarkPosition.dx
+                                    .clamp(minTextX, maxTextX),
+                            top: imageTop +
+                                watermarkState.watermarkPosition.dy
+                                    .clamp(minTextY, maxTextY),
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.move,
+                              child: Listener(
+                                onPointerDown: (event) {
+                                  isDragging.value = true;
+                                  dragStartOffset.value = event.position;
+                                  elementStartOffset.value =
+                                      watermarkState.watermarkPosition;
+                                  animationController.forward();
+                                  HapticFeedback.mediumImpact();
+                                },
+                                onPointerMove: (event) {
+                                  if (!isDragging.value) return;
 
-                                final RenderBox renderBox =
-                                    context.findRenderObject() as RenderBox;
-                                final localPosition = renderBox
-                                    .globalToLocal(details.globalPosition);
+                                  final delta =
+                                      event.position - dragStartOffset.value;
+                                  final newPosition = Offset(
+                                    (elementStartOffset.value.dx + delta.dx)
+                                        .clamp(minTextX, maxTextX),
+                                    (elementStartOffset.value.dy + delta.dy)
+                                        .clamp(minTextY, maxTextY),
+                                  );
 
-                                // Doğrudan pozisyon hesaplama
-                                final newPosition = Offset(
-                                  (localPosition.dx -
-                                          imageLeft -
-                                          textSize.width / 2)
-                                      .clamp(minX, maxX),
-                                  (localPosition.dy -
-                                          imageTop -
-                                          textSize.height / 2)
-                                      .clamp(minY, maxY),
-                                );
-
-                                // Pozisyonu güncelle
-                                ref
-                                    .read(watermarkNotifierProvider.notifier)
-                                    .updateWatermarkPosition(newPosition);
-                              },
-                              onPanEnd: (_) {
-                                onDragEnd();
-                              },
-                              onPanCancel: () {
-                                onDragEnd();
-                              },
-                              child: Transform.scale(
-                                scale: scaleAnimation,
-                                child: Transform.rotate(
-                                  angle: rotationAnimation,
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOutCubic,
-                                    decoration: BoxDecoration(
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(
-                                            isDragging.value ? 0.3 : 0.0,
-                                          ),
-                                          blurRadius: isDragging.value ? 15 : 0,
-                                          spreadRadius:
-                                              isDragging.value ? 3 : 0,
-                                        ),
-                                      ],
-                                    ),
+                                  ref
+                                      .read(watermarkNotifierProvider.notifier)
+                                      .updateWatermarkPosition(newPosition);
+                                },
+                                onPointerUp: (event) {
+                                  isDragging.value = false;
+                                  dragStartOffset.value = Offset.zero;
+                                  elementStartOffset.value = Offset.zero;
+                                  animationController.reverse();
+                                  HapticFeedback.lightImpact();
+                                },
+                                onPointerCancel: (event) {
+                                  isDragging.value = false;
+                                  dragStartOffset.value = Offset.zero;
+                                  elementStartOffset.value = Offset.zero;
+                                  animationController.reverse();
+                                  HapticFeedback.lightImpact();
+                                },
+                                child: Transform.scale(
+                                  scale: scaleAnimation,
+                                  child: Transform.rotate(
+                                    angle: rotationAnimation,
                                     child: Text(
                                       watermarkState.watermarkText!,
                                       style: textStyle,
@@ -251,86 +272,63 @@ class ImagePreview extends HookConsumerWidget {
                         if (watermarkState.logoPath != null &&
                             watermarkState.isLogoVisible)
                           Positioned(
-                            left: imageLeft + watermarkState.logoPosition.dx,
-                            top: imageTop + watermarkState.logoPosition.dy,
-                            child: GestureDetector(
-                              onPanStart: (details) {
-                                isDragging.value = true;
-                                HapticFeedback.mediumImpact();
-                              },
-                              onPanUpdate: (details) {
-                                if (!isDragging.value) return;
+                            left: imageLeft +
+                                watermarkState.logoPosition.dx
+                                    .clamp(minLogoX, maxLogoX),
+                            top: imageTop +
+                                watermarkState.logoPosition.dy
+                                    .clamp(minLogoY, maxLogoY),
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.move,
+                              child: Listener(
+                                onPointerDown: (event) {
+                                  isDragging.value = true;
+                                  dragStartOffset.value = event.position;
+                                  elementStartOffset.value =
+                                      watermarkState.logoPosition;
+                                  animationController.forward();
+                                  HapticFeedback.mediumImpact();
+                                },
+                                onPointerMove: (event) {
+                                  if (!isDragging.value) return;
 
-                                final RenderBox renderBox =
-                                    context.findRenderObject() as RenderBox;
-                                final localPosition = renderBox
-                                    .globalToLocal(details.globalPosition);
+                                  final delta =
+                                      event.position - dragStartOffset.value;
+                                  final newPosition = Offset(
+                                    (elementStartOffset.value.dx + delta.dx)
+                                        .clamp(minLogoX, maxLogoX),
+                                    (elementStartOffset.value.dy + delta.dy)
+                                        .clamp(minLogoY, maxLogoY),
+                                  );
 
-                                // Logo boyutlarını hesapla
-                                final scaledLogoWidth =
-                                    (logoSize.data?.width ?? 100) *
-                                        watermarkState.logoScale;
-                                final scaledLogoHeight =
-                                    (logoSize.data?.height ?? 100) *
-                                        watermarkState.logoScale;
-
-                                // Sınırları hesapla
-                                final maxX =
-                                    calculatedImageSize.width - scaledLogoWidth;
-                                final maxY = calculatedImageSize.height -
-                                    scaledLogoHeight;
-
-                                // Doğrudan pozisyon hesaplama
-                                final newPosition = Offset(
-                                  (localPosition.dx -
-                                          imageLeft -
-                                          scaledLogoWidth / 2)
-                                      .clamp(0.0, maxX),
-                                  (localPosition.dy -
-                                          imageTop -
-                                          scaledLogoHeight / 2)
-                                      .clamp(0.0, maxY),
-                                );
-
-                                // Pozisyonu güncelle
-                                ref
-                                    .read(watermarkNotifierProvider.notifier)
-                                    .updateLogoPosition(newPosition);
-                              },
-                              onPanEnd: (_) {
-                                isDragging.value = false;
-                                HapticFeedback.lightImpact();
-                              },
-                              onPanCancel: () {
-                                isDragging.value = false;
-                              },
-                              child: Transform.scale(
-                                scale: scaleAnimation,
-                                child: Transform.rotate(
-                                  angle: rotationAnimation,
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOutCubic,
-                                    decoration: BoxDecoration(
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(
-                                            isDragging.value ? 0.3 : 0.0,
-                                          ),
-                                          blurRadius: isDragging.value ? 15 : 0,
-                                          spreadRadius:
-                                              isDragging.value ? 3 : 0,
-                                        ),
-                                      ],
-                                    ),
+                                  ref
+                                      .read(watermarkNotifierProvider.notifier)
+                                      .updateLogoPosition(newPosition);
+                                },
+                                onPointerUp: (event) {
+                                  isDragging.value = false;
+                                  dragStartOffset.value = Offset.zero;
+                                  elementStartOffset.value = Offset.zero;
+                                  animationController.reverse();
+                                  HapticFeedback.lightImpact();
+                                },
+                                onPointerCancel: (event) {
+                                  isDragging.value = false;
+                                  dragStartOffset.value = Offset.zero;
+                                  elementStartOffset.value = Offset.zero;
+                                  animationController.reverse();
+                                  HapticFeedback.lightImpact();
+                                },
+                                child: Transform.scale(
+                                  scale: scaleAnimation,
+                                  child: Transform.rotate(
+                                    angle: rotationAnimation,
                                     child: Opacity(
                                       opacity: watermarkState.logoOpacity,
                                       child: Image.file(
                                         File(watermarkState.logoPath!),
-                                        width: (logoSize.data?.width ?? 100) *
-                                            watermarkState.logoScale,
-                                        height: (logoSize.data?.height ?? 100) *
-                                            watermarkState.logoScale,
+                                        width: scaledLogoWidth,
+                                        height: scaledLogoHeight,
                                         fit: BoxFit.contain,
                                       ),
                                     ),
