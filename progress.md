@@ -1,100 +1,79 @@
-# Flutter Filigran Ekleme Uygulaması - Proje İlerleme Takibi
+# Filigran App Progress
 
-## Proje Bilgileri
-- **Proje Adı:** Flutter Filigran Ekleme Uygulaması
-- **Proje Başlangıç Tarihi:** 01.01.2025
-- **Hedef Bitiş Tarihi:** 15.01.2025
-- **Proje Amacı:** Bir resme logo ve metin içeren filigran ekleyerek kaydetme işlevine sahip bir mobil uygulama geliştirmek.
-- **Kullanılan Teknolojiler:** 
-  - Flutter & Dart
-  - Riverpod (Durum Yönetimi)
-  - Freezed (Model Sınıfları)
-  - ImagePicker (Resim Seçme)
-  - CustomPainter (Filigran Çizimi)
+## ⚠️ Acil Görevler
+- [ ] Alt panel tasarımının yeniden düzenlenmesi
+  - Daha kompakt ve kullanıcı dostu bir tasarım
+  - Slider'ların yeniden konumlandırılması
+  - Logo kontrollerinin optimize edilmesi
+  - Daha iyi bir görsel hiyerarşi
 
----
+## ✅ Tamamlanan Özellikler
 
-## Görevler ve Durum
+### 1. Ana Özellikler
+- [x] Resim seçme ve görüntüleme
+- [x] Filigran metni ekleme ve düzenleme
+- [x] Logo ekleme ve düzenleme
+- [x] Paylaşma özelliği
 
-### Tamamlanan Görevler ✅
-- [01.01.2025] - Proje Yapılandırması
-  - Flutter projesi oluşturuldu
-  - Temel dizin yapısı hazırlandı
-  - Gerekli bağımlılıklar eklendi
-- [01.01.2025] - Temel Özellikler
-  - Model sınıfları oluşturuldu (WatermarkImage)
-  - Provider yapısı kuruldu (WatermarkNotifier)
-  - Temel UI bileşenleri eklendi
-    - ImagePreview widget'ı
-    - WatermarkControls widget'ı
-- [01.01.2025] - Filigran İşlevselliği
-  - Resim seçme özelliği eklendi
-  - Filigran metni ekleme özelliği eklendi
-  - Filigran konumlandırma özelliği eklendi
-  - Filigran boyut ve saydamlık ayarları eklendi
-- [03.01.2025] - Filigran Konumlandırma İyileştirmeleri
-  - GestureDetector yerine Listener kullanımına geçildi
-  - Sürükleme işlemi optimize edildi
-  - Parmak hareketini birebir takip eden sistem geliştirildi
-  - Resim sınırları içinde kalma kontrolü eklendi
-  - Kenar boşlukları optimize edildi (sağ: 15px)
-  - Haptic feedback desteği eklendi
-  - MouseRegion ile sürüklenebilir imleç eklendi
+### 2. Metin Özellikleri
+- [x] Metin boyutu ayarlama (0.5x - 3.0x)
+- [x] Opaklık ayarlama (0% - 100%)
+- [x] Sürükle-bırak ile konumlandırma
+- [x] Otomatik merkez konumlandırma
+- [x] Gölge efekti
 
-### Devam Eden Görevler 🚧
-- Logo Ekleme Özelliği
-  - Logo seçme ve konumlandırma
-  - Logo boyut ve saydamlık ayarları
-- Kaydetme İşlevi
-  - Filigran eklenmiş resmi cihaza kaydetme
-  - Gerekli izinlerin yönetimi
+### 3. Logo Özellikleri
+- [x] Logo boyutu ayarlama (0.1x - 2.0x)
+- [x] Logo opaklığı ayarlama (0% - 100%)
+- [x] Görünürlük kontrolü (göster/gizle)
+- [x] Sürükle-bırak ile konumlandırma
+- [x] Otomatik merkez konumlandırma
 
-### Bekleyen Görevler ⏳
-- Tema Desteği
-  - Açık/koyu tema desteği
-  - Özel renk şeması
-- Dil Desteği
-  - Türkçe/İngilizce dil seçeneği
-  - Yerelleştirme altyapısı
-- Kullanıcı Deneyimi İyileştirmeleri
-  - Yükleme ve hata durumları
-  - Geri bildirim mesajları
-  - Yardım ve ipuçları
+### 4. Kullanıcı Deneyimi
+- [x] Sürükleme animasyonları
+- [x] Haptic feedback (dokunsal geri bildirim)
+- [x] Sınırlar içinde kalma kontrolü
+- [x] Kolay kullanılabilir kontroller
 
----
+### 5. iOS Tarzı UI
+- [x] CupertinoTextField kullanımı
+- [x] CupertinoButton entegrasyonu
+- [x] iOS renk şeması
+- [x] Sarı çizgilerin kaldırılması
+- [x] Native görünüm
 
-## Günlük İlerleme
+### 6. Paylaşma Özellikleri
+- [x] Resmi otomatik kaydetme
+- [x] iOS tarzı paylaşma menüsü
+- [x] Hata yönetimi ve bildirimler
 
-### 03.01.2025
-- **Tamamlanan İşler:**
-  - Filigran konumlandırma sistemi tamamen yenilendi
-    - GestureDetector yerine Listener kullanımına geçildi
-    - Daha hassas ve performanslı sürükleme sistemi
-    - Parmak hareketini birebir takip eden sistem
-  - Sınır kontrolleri optimize edildi
-    - Resim kenarlarına yapışma özelliği
-    - Sağ kenarda 15px boşluk
-    - Üst, alt ve sol kenarlara tam yapışma
-  - Kullanıcı deneyimi iyileştirmeleri
-    - Haptic feedback desteği
-    - Sürüklenebilir imleç
-    - Smooth animasyonlar
-  - Text widget optimizasyonları
-    - Gölge efekti iyileştirildi
-    - Metin yüksekliği optimize edildi
-    - Gereksiz padding'ler kaldırıldı
+## 🔄 Geliştirilebilecek Özellikler
 
-- **Karşılaşılan Sorunlar ve Çözümleri:**
-  - Üst tarafta gereksiz boşluk sorunu
-    - ClipRect widget'ı kaldırıldı
-    - Text widget height parametresi eklendi
-    - Gölge efekti optimize edildi
-  - Sürükleme hassasiyeti sorunu
-    - Listener widget'ına geçildi
-    - Global pozisyon kullanımına geçildi
-    - Delta hesaplaması iyileştirildi
+### 1. Metin Geliştirmeleri
+- [ ] Farklı yazı tipleri desteği
+- [ ] Renk seçici
+- [ ] Metin hizalama seçenekleri
+- [ ] Birden fazla metin desteği
 
-- **Sonraki Adımlar:**
-  - Logo ekleme özelliğinin tamamlanması
-  - Kaydetme işlevinin eklenmesi
-  - GitHub entegrasyonu 
+### 2. Logo Geliştirmeleri
+- [ ] Döndürme özelliği
+- [ ] Filtre seçenekleri
+- [ ] Çerçeve ekleme
+- [ ] Birden fazla logo desteği
+
+### 3. Kaydetme Seçenekleri
+- [ ] Farklı kalite seçenekleri
+- [ ] Farklı dosya formatları (PNG, JPEG, vb.)
+- [ ] Özel boyut seçenekleri
+
+### 4. Gelişmiş Özellikler
+- [ ] Geri alma/ileri alma
+- [ ] Hazır şablonlar
+- [ ] Toplu işlem desteği
+- [ ] Özel efektler
+
+### 5. Kullanıcı Deneyimi İyileştirmeleri
+- [ ] Kılavuz çizgileri
+- [ ] Yakınlaştırma/uzaklaştırma
+- [ ] Klavye kısayolları
+- [ ] Gelişmiş düzenleme araçları 
